@@ -597,9 +597,8 @@ canvas { display: block; width: 100%; cursor: crosshair; }
         </div>
 
         <div class="actions">
-          <button class="btn-primary" id="submitBtn" disabled onclick="sendToHost('email')">&#9993;&ensp;Enviar por E-mail</button>
-          <button class="btn-primary btn-whatsapp" id="submitWA" disabled onclick="sendToHost('whatsapp')">&#128172;&ensp;Enviar por WhatsApp</button>
-          <p class="send-note">A ficha preenchida será enviada diretamente ao anfitrião.</p>
+          <button class="btn-primary" id="submitWA" disabled onclick="sendToHost()">&#128172;&ensp;Enviar por WhatsApp</button>
+          <p class="send-note">O PDF será salvo no seu celular — anexe na conversa do WhatsApp.</p>
         </div>
       </div>
     </div>
@@ -743,7 +742,6 @@ agreeCheck.addEventListener('change', checkSubmit);
 
 function checkSubmit() {
   const ok = agreeCheck.checked && hasSig;
-  document.getElementById('submitBtn').disabled = !ok;
   document.getElementById('submitWA').disabled = !ok;
 }
 
@@ -871,7 +869,7 @@ function buildPdfElement(fields) {
   return el;
 }
 
-function sendToHost(method) {
+function sendToHost() {
   var requiredFields = document.querySelectorAll('[required]');
   var allFilled = true;
   requiredFields.forEach(function(f) {
@@ -904,7 +902,7 @@ function sendToHost(method) {
 
   html2pdf().set(opt).from(el.firstChild).toPdf().output('blob').then(function(blob) {
     document.body.removeChild(el);
-    // Download PDF
+    // Silent download
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
@@ -913,16 +911,10 @@ function sendToHost(method) {
     a.click();
     document.body.removeChild(a);
     setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
-
-    if (method === 'whatsapp') {
-      window.open('https://wa.me/' + HOST_WHATSAPP + '?text=' + encodeURIComponent('Ficha de Ocupacao - ' + guestName + ' - FS | BOUTIQUE\n\nPDF em anexo.'), '_blank');
-      showToast('PDF baixado — anexe no WhatsApp');
-    } else {
-      var subject = encodeURIComponent('Ficha de Ocupacao - ' + guestName + ' - FS | BOUTIQUE');
-      var body = encodeURIComponent('Segue em anexo a Ficha de Ocupacao.\n\n- FS | BOUTIQUE');
-      window.open('mailto:' + HOST_EMAIL + '?subject=' + subject + '&body=' + body, '_self');
-      showToast('PDF baixado — anexe no e-mail');
-    }
+    // Open WhatsApp with pre-written message
+    var msg = encodeURIComponent('Ola, segue minha ficha de ocupacao preenchida para o apartamento 17A - Modulo 7.\n\nPor favor, veja o PDF em anexo.\n\n' + guestName + '\nFS | BOUTIQUE');
+    window.open('https://wa.me/' + HOST_WHATSAPP + '?text=' + msg, '_blank');
+    showToast('PDF salvo — anexe na conversa do WhatsApp');
   }).catch(function(err) {
     if (el.parentNode) document.body.removeChild(el);
     console.error('PDF error:', err);
