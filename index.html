@@ -6,7 +6,7 @@
 <title>Ficha de Ocupação — FS | BOUTIQUE — Riviera de São Lourenço</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@100;200;300;400&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root {
   --black: #0a0a0a;
@@ -801,154 +801,80 @@ function buildSummary(fields) {
 const HOST_EMAIL = 'fabio@fsboutique.co';
 const HOST_WHATSAPP = '5511910634851';
 
-// ── PDF generation with pure jsPDF (no html2canvas — synchronous, mobile-safe) ──
-function generatePDF(fields) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-  const W = 210, H = 297, M = 15; // page width, height, margin
-  const CW = W - 2 * M; // content width
-  let y = M;
+// ── PDF generation with html2pdf.js ──
+function buildPdfElement(fields) {
+  var sigDataURL = canvas.toDataURL('image/png');
+  var sigDate = document.getElementById('sigDate').value;
+  var property = fields.filter(function(f) { return f.label === 'Apartamento' || f.label === 'Bloco'; });
+  var occupants = fields.filter(function(f) { return f.label.indexOf('Ocupante') === 0; });
+  var vehicles = fields.filter(function(f) { return f.label.indexOf('Ve') === 0; });
+  var dates = fields.filter(function(f) { return f.label.indexOf('Data de') === 0; });
 
-  // Colors
-  const GOLD = [201, 169, 110];
-  const DARK = [26, 26, 26];
-  const MUTED = [138, 132, 120];
-  const BORDER = [220, 216, 208];
-
-  function checkPage(need) {
-    if (y + need > H - M) { doc.addPage(); y = M; }
+  function row(label, value) {
+    return '<tr><td style="padding:6px 10px;font-size:11px;color:#8a8478;letter-spacing:1px;border-bottom:1px solid #e8e4dc;width:40%">' + label + '</td><td style="padding:6px 10px;font-size:13px;color:#1a1a1a;border-bottom:1px solid #e8e4dc">' + (value || '-') + '</td></tr>';
+  }
+  function section(title) {
+    return '<div style="margin:18px 0 8px;padding-bottom:4px;border-bottom:2px solid #c9a96e;font-size:11px;letter-spacing:2px;color:#c9a96e;font-weight:bold">' + title.toUpperCase() + '</div>';
   }
 
-  // ── Header ──
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(12);
-  doc.setTextColor(...GOLD);
-  doc.text('FS  |  BOUTIQUE', W / 2, y, { align: 'center' });
-  y += 8;
-  doc.setFontSize(16);
-  doc.setTextColor(...DARK);
-  doc.text('FICHA DE OCUPACAO', W / 2, y, { align: 'center' });
-  y += 6;
-  doc.setFontSize(8);
-  doc.setTextColor(...MUTED);
-  doc.text('Riviera de Sao Lourenco  -  Condominio Viva Vida Beach', W / 2, y, { align: 'center' });
-  y += 4;
-  doc.setDrawColor(...GOLD);
-  doc.setLineWidth(0.3);
-  doc.line(M, y, W - M, y);
-  y += 8;
-
-  // ── Section helper ──
-  function sectionHeader(title) {
-    checkPage(12);
-    doc.setDrawColor(...GOLD);
-    doc.setLineWidth(0.2);
-    doc.rect(M, y - 3.5, 5, 5);
-    doc.setFontSize(9);
-    doc.setTextColor(...DARK);
-    doc.setFont('helvetica', 'bold');
-    doc.text(title.toUpperCase(), M + 8, y);
-    doc.setFont('helvetica', 'normal');
-    y += 6;
-  }
-
-  function dataRow(label, value) {
-    checkPage(8);
-    doc.setFontSize(7.5);
-    doc.setTextColor(...MUTED);
-    doc.text(label.toUpperCase(), M, y);
-    doc.setFontSize(10);
-    doc.setTextColor(...DARK);
-    doc.text(String(value || '-'), M + 55, y);
-    y += 2;
-    doc.setDrawColor(...BORDER);
-    doc.setLineWidth(0.1);
-    doc.line(M, y, W - M, y);
-    y += 5;
-  }
-
-  // ── Property & Host ──
-  sectionHeader('Propriedade & Anfitriao');
-  dataRow('Anfitriao', 'Fabio Silva');
-  dataRow('Condominio', 'Viva Vida Beach');
-  dataRow('Localizacao', 'Riviera de Sao Lourenco, Bertioga, SP');
-
-  const property = fields.filter(f => ['Apartamento','Bloco'].includes(f.label));
-  property.forEach(f => dataRow(f.label, f.value));
-
-  // ── Occupants ──
-  y += 2;
-  const occupants = fields.filter(f => f.label.startsWith('Ocupante'));
-  sectionHeader('Ocupantes');
-  occupants.forEach(f => dataRow(f.label.replace('Ocupante ', 'Ocup. '), f.value));
-
-  // ── Vehicles ──
-  const vehicles = fields.filter(f => f.label.startsWith('Veiculo') || f.label.startsWith('Veículo'));
+  var h = '';
+  h += '<div style="font-family:Helvetica,Arial,sans-serif;width:100%;padding:24px;background:#fff;color:#1a1a1a">';
+  // Header
+  h += '<div style="text-align:center;padding-bottom:16px;border-bottom:2px solid #c9a96e;margin-bottom:8px">';
+  h += '<div style="font-size:14px;letter-spacing:8px;color:#c9a96e">FS | BOUTIQUE</div>';
+  h += '<div style="font-size:20px;letter-spacing:4px;color:#1a1a1a;margin-top:8px">FICHA DE OCUPACAO</div>';
+  h += '<div style="font-size:9px;letter-spacing:2px;color:#8a8478;margin-top:4px">RIVIERA DE SAO LOURENCO - CONDOMINIO VIVA VIDA BEACH</div>';
+  h += '</div>';
+  // Property
+  h += section('Propriedade & Anfitriao');
+  h += '<table style="width:100%;border-collapse:collapse">';
+  h += row('Anfitriao', 'Fabio Silva');
+  h += row('Condominio', 'Viva Vida Beach');
+  h += row('Localizacao', 'Riviera de Sao Lourenco, Bertioga, SP');
+  for (var i = 0; i < property.length; i++) h += row(property[i].label, property[i].value);
+  h += '</table>';
+  // Occupants
+  h += section('Ocupantes');
+  h += '<table style="width:100%;border-collapse:collapse">';
+  for (var i = 0; i < occupants.length; i++) h += row(occupants[i].label, occupants[i].value);
+  h += '</table>';
+  // Vehicles
   if (vehicles.length) {
-    y += 2;
-    sectionHeader('Veiculos');
-    vehicles.forEach(f => dataRow(f.label, f.value));
+    h += section('Veiculos');
+    h += '<table style="width:100%;border-collapse:collapse">';
+    for (var i = 0; i < vehicles.length; i++) h += row(vehicles[i].label, vehicles[i].value);
+    h += '</table>';
   }
+  // Dates
+  h += section('Periodo de Ocupacao');
+  h += '<table style="width:100%;border-collapse:collapse">';
+  for (var i = 0; i < dates.length; i++) h += row(dates[i].label, dates[i].value);
+  h += '</table>';
+  // Declaration
+  h += section('Declaracao & Assinatura');
+  h += '<div style="background:#f5f3ef;border:1px solid #e8e4dc;padding:10px;margin:8px 0;font-size:10px;line-height:1.6;color:#5a5650">';
+  h += 'Eu, abaixo assinado(a), declaro que li e concordo com o Regulamento Interno do Condominio Viva Vida Beach e me comprometo a cumpri-lo durante todo o periodo de ocupacao.';
+  h += '</div>';
+  // Signature
+  h += '<div style="margin-top:10px"><div style="font-size:9px;letter-spacing:1px;color:#8a8478;margin-bottom:4px">ASSINATURA DO RESPONSAVEL</div>';
+  h += '<div style="border:1px solid #e8e4dc;display:inline-block;padding:4px;background:#fff">';
+  h += '<img src="' + sigDataURL + '" style="height:80px;display:block">';
+  h += '</div></div>';
+  h += '<div style="margin-top:8px;font-size:10px;color:#8a8478">Data: ' + sigDate + '</div>';
+  // Footer
+  h += '<div style="text-align:center;margin-top:24px;padding-top:12px;border-top:2px solid #c9a96e;font-size:8px;letter-spacing:2px;color:#8a8478">FS | BOUTIQUE - RIVIERA DE SAO LOURENCO</div>';
+  h += '</div>';
 
-  // ── Dates ──
-  y += 2;
-  const dates = fields.filter(f => f.label.startsWith('Data de'));
-  sectionHeader('Periodo de Ocupacao');
-  dates.forEach(f => dataRow(f.label, f.value));
-
-  // ── Declaration ──
-  y += 2;
-  checkPage(40);
-  sectionHeader('Declaracao & Assinatura');
-  doc.setFillColor(249, 247, 243);
-  doc.setDrawColor(...BORDER);
-  doc.rect(M, y, CW, 14, 'FD');
-  doc.setFontSize(7.5);
-  doc.setTextColor(90, 86, 80);
-  const declText = 'Eu, abaixo assinado(a), declaro que li e concordo com o Regulamento Interno do Condominio Viva Vida Beach e me comprometo a cumpri-lo durante todo o periodo de ocupacao.';
-  const lines = doc.splitTextToSize(declText, CW - 6);
-  doc.text(lines, M + 3, y + 4.5);
-  y += 18;
-
-  // ── Signature ──
-  doc.setFontSize(7.5);
-  doc.setTextColor(...MUTED);
-  doc.text('ASSINATURA DO RESPONSAVEL', M, y);
-  y += 3;
-  try {
-    const sigData = canvas.toDataURL('image/png');
-    doc.setDrawColor(...BORDER);
-    doc.rect(M, y, 70, 25);
-    doc.addImage(sigData, 'PNG', M + 1, y + 1, 68, 23);
-  } catch (e) {
-    doc.setFontSize(8);
-    doc.text('[Assinatura digital]', M + 2, y + 13);
-  }
-  y += 28;
-  const sigDate = document.getElementById('sigDate').value;
-  doc.setFontSize(8);
-  doc.setTextColor(...MUTED);
-  doc.text('Data: ' + sigDate, M, y);
-
-  // ── Footer ──
-  y = H - M;
-  doc.setDrawColor(...GOLD);
-  doc.setLineWidth(0.3);
-  doc.line(M, y - 4, W - M, y - 4);
-  doc.setFontSize(7);
-  doc.setTextColor(...MUTED);
-  doc.text('FS | BOUTIQUE  -  Riviera de Sao Lourenco', W / 2, y, { align: 'center' });
-
-  const guestName = document.getElementById('occupant1Name').value || 'Hospede';
-  const filename = 'Ficha-Ocupacao-' + guestName.replace(/\s+/g, '-') + '.pdf';
-  const blob = doc.output('blob');
-  return { blob, filename };
+  var el = document.createElement('div');
+  el.innerHTML = h;
+  el.style.cssText = 'position:absolute;left:0;top:0;width:700px;background:#fff;z-index:99999;';
+  return el;
 }
 
 function sendToHost(method) {
-  const requiredFields = document.querySelectorAll('[required]');
-  let allFilled = true;
-  requiredFields.forEach(f => {
+  var requiredFields = document.querySelectorAll('[required]');
+  var allFilled = true;
+  requiredFields.forEach(function(f) {
     if (!f.value) {
       allFilled = false;
       f.style.borderColor = 'var(--danger)';
@@ -956,59 +882,52 @@ function sendToHost(method) {
       f.addEventListener('change', function() { this.style.borderColor = ''; }, { once: true });
     }
   });
-  if (!allFilled) {
-    showToast('Preencha todos os campos obrigatórios');
-    return;
-  }
+  if (!allFilled) { showToast('Preencha todos os campos obrigatorios'); return; }
 
-  const fields = gatherFormData();
-  if (fields.length === 0) {
-    showToast('Preencha o formulário primeiro');
-    return;
-  }
+  var fields = gatherFormData();
+  if (fields.length === 0) { showToast('Preencha o formulario primeiro'); return; }
 
-  const guestName = document.getElementById('occupant1Name').value || 'Hóspede';
+  var guestName = document.getElementById('occupant1Name').value || 'Hospede';
+  var filename = 'Ficha-Ocupacao-' + guestName.replace(/\s+/g, '-') + '.pdf';
+  showToast('Gerando PDF...');
 
-  try {
-    const { blob, filename } = generatePDF(fields);
-    const file = new File([blob], filename, { type: 'application/pdf' });
+  var el = buildPdfElement(fields);
+  document.body.appendChild(el);
+
+  var opt = {
+    margin: [6, 6, 6, 6],
+    filename: filename,
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  html2pdf().set(opt).from(el.firstChild).toPdf().output('blob').then(function(blob) {
+    document.body.removeChild(el);
+    // Download PDF
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
 
     if (method === 'whatsapp') {
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        navigator.share({ title: 'Ficha de Ocupacao - ' + guestName, files: [file] })
-          .then(() => showToast('Ficha enviada!'))
-          .catch(() => {
-            downloadBlob(blob, filename);
-            window.open('https://wa.me/' + HOST_WHATSAPP + '?text=' + encodeURIComponent('Ficha de Ocupacao - ' + guestName + ' - FS | BOUTIQUE\n\nPDF em anexo.'), '_blank');
-            showToast('PDF baixado — anexe no WhatsApp');
-          });
-      } else {
-        downloadBlob(blob, filename);
-        window.open('https://wa.me/' + HOST_WHATSAPP + '?text=' + encodeURIComponent('Ficha de Ocupacao - ' + guestName + ' - FS | BOUTIQUE\n\nPDF em anexo.'), '_blank');
-        showToast('PDF baixado — anexe no WhatsApp');
-      }
+      window.open('https://wa.me/' + HOST_WHATSAPP + '?text=' + encodeURIComponent('Ficha de Ocupacao - ' + guestName + ' - FS | BOUTIQUE\n\nPDF em anexo.'), '_blank');
+      showToast('PDF baixado — anexe no WhatsApp');
     } else {
-      downloadBlob(blob, filename);
-      const subject = encodeURIComponent('Ficha de Ocupacao - ' + guestName + ' - FS | BOUTIQUE');
-      const body = encodeURIComponent('Segue em anexo a Ficha de Ocupacao.\n\n- FS | BOUTIQUE');
+      var subject = encodeURIComponent('Ficha de Ocupacao - ' + guestName + ' - FS | BOUTIQUE');
+      var body = encodeURIComponent('Segue em anexo a Ficha de Ocupacao.\n\n- FS | BOUTIQUE');
       window.open('mailto:' + HOST_EMAIL + '?subject=' + subject + '&body=' + body, '_self');
       showToast('PDF baixado — anexe no e-mail');
     }
-  } catch (err) {
-    console.error('PDF generation error:', err, err.stack);
+  }).catch(function(err) {
+    if (el.parentNode) document.body.removeChild(el);
+    console.error('PDF error:', err);
     showToast('Erro ao gerar PDF: ' + (err.message || err));
-  }
-}
-
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+  });
 }
 
 function showToast(msg) {
