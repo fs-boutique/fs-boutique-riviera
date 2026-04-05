@@ -874,28 +874,33 @@ async function generatePDF(fields) {
   const html = buildPDFContent(fields);
   const container = document.createElement('div');
   container.innerHTML = html;
-  // Must be on-screen for html2canvas to render — hide visually with clip
-  container.style.cssText = 'position:absolute;top:0;left:0;width:680px;z-index:-9999;pointer-events:none;clip:rect(0,0,0,0);overflow:hidden;';
+  // Behind everything but fully laid out — no clip, no overflow hidden
+  container.style.cssText = 'position:fixed;top:0;left:0;width:680px;z-index:-1;opacity:0.01;pointer-events:none;';
   document.body.appendChild(container);
-  // Force layout before capture
+
   const el = container.querySelector('#pdfContent');
   el.style.width = '680px';
+  el.style.background = '#ffffff';
   el.offsetHeight; // force reflow
+  // Small delay to ensure paint
+  await new Promise(r => setTimeout(r, 100));
 
   const guestName = document.getElementById('occupant1Name').value || 'Hospede';
   const filename = `Ficha-Ocupacao-${guestName.replace(/\s+/g, '-')}.pdf`;
 
-  const opt = {
-    margin: [8, 4, 8, 4],
-    filename: filename,
-    image: { type: 'png', quality: 1 },
-    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: 680, scrollX: 0, scrollY: 0, windowWidth: 680 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-
-  const pdf = await html2pdf().set(opt).from(el).toPdf().output('blob');
-  document.body.removeChild(container);
-  return { blob: pdf, filename: filename };
+  try {
+    const opt = {
+      margin: [8, 4, 8, 4],
+      filename: filename,
+      image: { type: 'png', quality: 1 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: 680, height: el.scrollHeight, scrollX: 0, scrollY: 0, windowWidth: 700 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    const pdf = await html2pdf().set(opt).from(el).toPdf().output('blob');
+    return { blob: pdf, filename: filename };
+  } finally {
+    document.body.removeChild(container);
+  }
 }
 
 async function sendToHost(method) {
@@ -951,8 +956,8 @@ async function sendToHost(method) {
       showToast('PDF baixado — anexe no e-mail');
     }
   } catch (err) {
-    console.error('PDF generation error:', err);
-    showToast('Erro ao gerar PDF. Tente novamente.');
+    console.error('PDF generation error:', err, err.stack);
+    showToast('Erro ao gerar PDF: ' + (err.message || err));
   }
 }
 
