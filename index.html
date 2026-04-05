@@ -802,6 +802,9 @@ const HOST_WHATSAPP = '5511910634851';
 // ── PDF generation with html2pdf.js ──
 // ── Synchronous PDF with jsPDF (bundled inside html2pdf.js) ──
 function generatePdfBlob(fields) {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    throw new Error('jsPDF nao carregou. Recarregue a pagina.');
+  }
   var jsPDF = window.jspdf.jsPDF;
   var doc = new jsPDF({ unit: 'mm', format: 'a4' });
   var W = 210, M = 15, CW = W - 2 * M;
@@ -954,32 +957,43 @@ function sendToHost() {
   var bloco = document.getElementById('bloco').value || 'Modulo 7';
   var filename = 'Ficha-Ocupacao-' + guestName.replace(/\s+/g, '-') + '.pdf';
 
+  var shareText = 'Ola, segue minha ficha de ocupacao preenchida para o apartamento ' + apt + ' - ' + bloco + '.';
+
+  function doFallback(blob) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename; a.style.display = 'none';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    showToast('PDF salvo — redirecionando ao WhatsApp...');
+    setTimeout(function() {
+      URL.revokeObjectURL(url);
+      window.location.href = 'https://wa.me/' + HOST_WHATSAPP + '?text=' + encodeURIComponent(shareText + '\n\nPDF em anexo.\n\n' + guestName + '\nFS | BOUTIQUE');
+    }, 1500);
+  }
+
   try {
-    // Synchronous — user gesture stays alive
+    // Synchronous — user gesture stays alive for navigator.share
     var blob = generatePdfBlob(fields);
     var file = new File([blob], filename, { type: 'application/pdf' });
-    var shareText = 'Ola, segue minha ficha de ocupacao preenchida para o apartamento ' + apt + ' - ' + bloco + '.';
 
-    // Mobile: navigator.share sends PDF as WhatsApp attachment
+    // Mobile: navigator.share sends PDF as real WhatsApp attachment
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       navigator.share({ text: shareText, files: [file] }).then(function() {
         showToast('Ficha enviada!');
-      }).catch(function() {});
+      }).catch(function(err) {
+        console.warn('Share failed/cancelled:', err.name, err.message);
+        if (err.name !== 'AbortError') {
+          // Share was blocked (NotAllowedError) or failed — fall back
+          doFallback(blob);
+        }
+      });
     } else {
-      // Desktop fallback: download + redirect to wa.me
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url; a.download = filename; a.style.display = 'none';
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      showToast('PDF salvo — redirecionando ao WhatsApp...');
-      setTimeout(function() {
-        URL.revokeObjectURL(url);
-        window.location.href = 'https://wa.me/' + HOST_WHATSAPP + '?text=' + encodeURIComponent(shareText + '\n\nPDF em anexo.\n\n' + guestName + '\nFS | BOUTIQUE');
-      }, 1500);
+      // Desktop or no Web Share support — download + redirect
+      doFallback(blob);
     }
   } catch (err) {
     console.error('PDF error:', err);
-    showToast('Erro ao gerar PDF: ' + (err.message || err));
+    showToast('Erro: ' + (err.message || err));
   }
 }
 
