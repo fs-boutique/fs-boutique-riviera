@@ -15,10 +15,10 @@
   --card-hover: #1f1f1f;
   --border: #2a2a2a;
   --border-light: #333;
-  --gold: #c9a96e;
-  --gold-light: #d4b87a;
-  --gold-dim: rgba(201, 169, 110, 0.15);
-  --gold-glow: rgba(201, 169, 110, 0.08);
+  --gold: #8C7468;
+  --gold-light: #a89878;
+  --gold-dim: rgba(140, 116, 104, 0.15);
+  --gold-glow: rgba(140, 116, 104, 0.08);
   --white: #f5f5f0;
   --text: #e8e4dc;
   --text-muted: #8a8478;
@@ -421,8 +421,8 @@ canvas { display: block; width: 100%; cursor: crosshair; }
 <!-- Header -->
 <div class="header">
 <div style="display:inline-flex;align-items:center;gap:6px;">
-<span style="font-family:Playfair Display,Georgia,serif;font-size:22px;font-weight:400;color:#c9a96e;">F</span>
-<span style="font-family:Playfair Display,Georgia,serif;font-size:22px;font-weight:400;color:#c9a96e;">S</span>
+<span style="font-family:Playfair Display,Georgia,serif;font-size:22px;font-weight:400;color:#8C7468;">F</span>
+<span style="font-family:Playfair Display,Georgia,serif;font-size:22px;font-weight:400;color:#8C7468;">S</span>
 </div>
   <div style="font-family: 'Playfair Display', Georgia, serif; font-size: 8px; letter-spacing: 5px; color: var(--text-dim); margin-top: 2px; padding-left: 5px;">BOUTIQUE</div>
   <div style="width: 30px; height: 0.5px; background: var(--text-dim); margin: 12px auto;"></div>
@@ -704,7 +704,7 @@ let drawing = false, hasSig = false;
 function resizeCanvas() {
   const wrap = canvas.parentElement;
   canvas.width = wrap.clientWidth - 4;
-  ctx.strokeStyle = '#c9a96e';
+  ctx.strokeStyle = '#8C7468';
   ctx.lineWidth = 1.5;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
