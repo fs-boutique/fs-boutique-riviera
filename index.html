@@ -807,138 +807,160 @@ function buildSummary(fields) {
 const HOST_EMAIL = 'fabio@fsboutique.co';
 const HOST_WHATSAPP = '5511910634851';
 
-// ── PDF generation with html2pdf.js ──
-// ── Synchronous PDF with jsPDF (bundled inside html2pdf.js) ──
+// ── PDF generation ──
 function generatePdfBlob(fields) {
   if (!window.jspdf || !window.jspdf.jsPDF) {
     throw new Error('jsPDF nao carregou. Recarregue a pagina.');
   }
-  var jsPDF = window.jspdf.jsPDF;
-  var doc = new jsPDF({ unit: 'mm', format: 'a4' });
-  var W = 210, M = 15, CW = W - 2 * M;
-  var y = M;
-  var GOLD = [201, 169, 110], DARK = [26, 26, 26], MUTED = [138, 132, 120], BORDER = [220, 216, 208];
+  var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+  var W = 210, M = 12, CW = W - 2*M;
+  // Approved colors
+  var BG      = [255,252,250]; // #FFFCFA
+  var BAR     = [140,116,104]; // #8C7468
+  var BAR_TXT = [255,252,250]; // #FFFCFA
+  var SUB_TXT = [232,221,214]; // #e8ddd6
+  var FLD_BG  = [245,240,235]; // #f5f0eb
+  var FLD_BD  = [212,200,192]; // #d4c8c0
+  var FLD_TXT = [58, 46, 40];  // #3a2e28
+  var LBL     = [160,148,136]; // #a09488
 
-  function checkPage(n) { if (y + n > 297 - M) { doc.addPage(); y = M; } }
+  // Page background
+  doc.setFillColor(BG[0],BG[1],BG[2]);
+  doc.rect(0,0,W,297,'F');
 
-  function heading(t) {
-    checkPage(12);
-    doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]);
-    doc.setLineWidth(0.5);
-    doc.line(M, y, M + CW, y);
-    y += 5;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(GOLD[0], GOLD[1], GOLD[2]);
-    doc.text(t.toUpperCase(), M, y);
-    doc.setFont('helvetica', 'normal');
-    y += 5;
-  }
-
-  function row(label, value) {
-    checkPage(8);
-    doc.setFontSize(7.5);
-    doc.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
-    doc.text(label.toUpperCase(), M, y);
-    doc.setFontSize(10);
-    doc.setTextColor(DARK[0], DARK[1], DARK[2]);
-    var val = String(value || '-');
-    var maxW = CW - 58;
-    if (doc.getTextWidth(val) > maxW) {
-      var lines = doc.splitTextToSize(val, maxW);
-      doc.text(lines, M + 55, y);
-      y += (lines.length - 1) * 4;
-    } else {
-      doc.text(val, M + 55, y);
-    }
-    y += 2;
-    doc.setDrawColor(BORDER[0], BORDER[1], BORDER[2]);
-    doc.setLineWidth(0.1);
-    doc.line(M, y, M + CW, y);
-    y += 5;
-  }
-
-  // Header
-  doc.setFontSize(13);
-  doc.setTextColor(GOLD[0], GOLD[1], GOLD[2]);
-  doc.text('FS  |  BOUTIQUE', W / 2, y, { align: 'center' });
-  y += 8;
-  doc.setFontSize(17);
-  doc.setTextColor(DARK[0], DARK[1], DARK[2]);
-  doc.text('FICHA DE OCUPACAO', W / 2, y, { align: 'center' });
-  y += 6;
-  doc.setFontSize(8);
-  doc.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
-  doc.text('Riviera de Sao Lourenco  -  Condominio Viva Vida Beach', W / 2, y, { align: 'center' });
-  y += 4;
-  doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]);
-  doc.setLineWidth(0.4);
-  doc.line(M, y, W - M, y);
-  y += 8;
-
+  // Header bar
+  doc.setFillColor(BAR[0],BAR[1],BAR[2]);
+  doc.rect(0,0,W,32,'F');
+  // F | S brand
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]);
+  doc.text('F', W/2-4, 9); doc.text('S', W/2+3, 9);
+  doc.setLineWidth(0.3); doc.setDrawColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]);
+  doc.line(W/2, 5, W/2, 11);
+  // BOUTIQUE
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(SUB_TXT[0],SUB_TXT[1],SUB_TXT[2]);
+  doc.text('B O U T I Q U E', W/2, 14, {align:'center'});
+  // Thin line
+  doc.setDrawColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]); doc.setLineWidth(0.2);
+  doc.line(W/2-7.5, 16.5, W/2+7.5, 16.5);
+  // Title
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]);
+  doc.text('FICHA DE OCUPACAO', W/2, 22, {align:'center'});
   // Property
-  heading('Propriedade & Anfitriao');
-  row('Anfitriao', 'Fabio Silva');
-  row('Condominio', 'Viva Vida Beach');
-  row('Localizacao', 'Riviera de Sao Lourenco, Bertioga, SP');
-  var prop = fields.filter(function(f) { return f.label === 'Apartamento' || f.label === 'Bloco'; });
-  for (var i = 0; i < prop.length; i++) row(prop[i].label, prop[i].value);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(SUB_TXT[0],SUB_TXT[1],SUB_TXT[2]);
+  doc.text('Condominio Viva Vida Beach  —  Riviera de Sao Lourenco', W/2, 27, {align:'center'});
 
-  // Occupants
-  var occ = fields.filter(function(f) { return f.label.indexOf('Ocupante') === 0; });
-  heading('Ocupantes');
-  for (var i = 0; i < occ.length; i++) row(occ[i].label, occ[i].value);
+  var y = 37;
+  var hw = (CW-4)/2;
+  var tw = (CW-8)/3;
+
+  function sec(title) {
+    y += 2;
+    doc.setFillColor(BAR[0],BAR[1],BAR[2]);
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]);
+    doc.rect(M, y, CW, 6.5, 'F');
+    doc.text('  '+title, M, y+4.8);
+    y += 9;
+  }
+
+  function fld(label, value, x, w, fh) {
+    fh = fh || 8;
+    doc.setFontSize(6); doc.setTextColor(LBL[0],LBL[1],LBL[2]); doc.setFont('helvetica','normal');
+    doc.text(label.toUpperCase(), x, y+3);
+    doc.setFillColor(FLD_BG[0],FLD_BG[1],FLD_BG[2]);
+    doc.setDrawColor(FLD_BD[0],FLD_BD[1],FLD_BD[2]); doc.setLineWidth(0.25);
+    doc.rect(x, y+3.5, w, fh, 'FD');
+    doc.setFontSize(8.5); doc.setTextColor(FLD_TXT[0],FLD_TXT[1],FLD_TXT[2]);
+    var lines = doc.splitTextToSize(String(value||''), w-4);
+    doc.text(lines[0]||'', x+2, y+9.5);
+  }
+
+  var prop = {};
+  fields.forEach(function(f){ prop[f.label] = f.value; });
+
+  sec('PROPRIEDADE & ANFITRIAO');
+  fld('Anfitriao', 'Fabio Silva', M, hw);
+  fld('Condominio', 'Viva Vida Beach', M+hw+4, hw);
+  y += 12.5;
+  fld('Apartamento', prop['Apartamento']||'17A', M, hw);
+  fld('Bloco', prop['Bloco']||'Modulo 7', M+hw+4, hw);
+  y += 12.5;
+  fld('Localizacao', 'Riviera de Sao Lourenco, Bertioga, SP', M, CW);
+  y += 12.5;
+
+  sec('OCUPANTES');
+  var occFields = fields.filter(function(f){ return f.label.indexOf('Ocupante')===0; });
+  var occMap = {};
+  occFields.forEach(function(f){
+    var parts = f.label.split(' — ');
+    var key = parts.length > 1 ? parts[1] : f.label;
+    var num = parts[0];
+    if (!occMap[num]) occMap[num] = {};
+    occMap[num][key] = f.value;
+  });
+  Object.keys(occMap).forEach(function(num) {
+    var o = occMap[num];
+    fld('Nome Completo', o['Nome']||o['Full Name']||'', M, CW); y += 12.5;
+    fld('RG', o['RG']||'', M, tw);
+    fld('CPF', o['CPF']||'', M+tw+4, tw);
+    fld('Telefone', o['Telefone']||o['Phone']||'', M+tw*2+8, tw);
+    y += 12.5;
+    fld('E-mail', o['E-mail']||o['Email']||'', M, CW); y += 12.5;
+  });
 
   // Vehicles
-  var veh = fields.filter(function(f) { return f.label.indexOf('Ve') === 0; });
-  if (veh.length) {
-    heading('Veiculos');
-    for (var i = 0; i < veh.length; i++) row(veh[i].label, veh[i].value);
+  var vehs = fields.filter(function(f){ return f.label.indexOf('Ve')===0; });
+  if(vehs.length){
+    sec('VEICULOS');
+    for(var i=0; i<vehs.length; i+=2){
+      fld(vehs[i].label.split(' — ')[1]||'Modelo/Cor', vehs[i].value, M, hw);
+      if(vehs[i+1]) fld(vehs[i+1].label.split(' — ')[1]||'Placa', vehs[i+1].value, M+hw+4, hw);
+      y+=12.5;
+    }
   }
 
-  // Dates
-  var dat = fields.filter(function(f) { return f.label.indexOf('Data de') === 0; });
-  heading('Periodo de Ocupacao');
-  for (var i = 0; i < dat.length; i++) row(dat[i].label, dat[i].value);
+  // Stay period
+  sec('PERIODO DE OCUPACAO');
+  fld('Data de Inicio', prop['Data de Início']||prop['Data de Inicio']||'', M, hw);
+  fld('Data de Termino', prop['Data de Término']||prop['Data de Termino']||'', M+hw+4, hw);
+  y += 12.5;
 
   // Declaration
-  checkPage(50);
-  heading('Declaracao & Assinatura');
-  doc.setFillColor(249, 247, 243);
-  doc.setDrawColor(BORDER[0], BORDER[1], BORDER[2]);
-  var declText = 'Eu, abaixo assinado(a), declaro que li e concordo com o Regulamento Interno do Condominio Viva Vida Beach e me comprometo a cumpri-lo durante todo o periodo de ocupacao.';
-  var declLines = doc.splitTextToSize(declText, CW - 8);
-  var declH = declLines.length * 4 + 6;
-  doc.rect(M, y, CW, declH, 'FD');
-  doc.setFontSize(8);
-  doc.setTextColor(90, 86, 80);
-  doc.text(declLines, M + 4, y + 5);
-  y += declH + 4;
+  sec('DECLARACAO & ASSINATURA');
+  var declTxt = 'Eu, abaixo assinado(a), declaro que li e concordo com o Regulamento Interno do Condominio Viva Vida Beach e me comprometo a cumpri-lo durante todo o periodo de ocupacao.';
+  var declLines = doc.splitTextToSize(declTxt, CW-4);
+  var dh = declLines.length*4.5+6;
+  doc.setFillColor(FLD_BG[0],FLD_BG[1],FLD_BG[2]);
+  doc.setDrawColor(FLD_BD[0],FLD_BD[1],FLD_BD[2]); doc.setLineWidth(0.25);
+  doc.rect(M, y, CW, dh, 'FD');
+  doc.setFontSize(7.5); doc.setTextColor(LBL[0],LBL[1],LBL[2]); doc.setFont('helvetica','normal');
+  doc.text(declLines, M+2, y+5);
+  y += dh+4;
 
-  // Signature
-  doc.setFontSize(7.5);
-  doc.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
-  doc.text('ASSINATURA DO RESPONSAVEL', M, y);
-  y += 3;
+  var sw = CW*0.62, dw = CW*0.32;
+  doc.setFontSize(6); doc.setTextColor(LBL[0],LBL[1],LBL[2]);
+  doc.text('ASSINATURA DO RESPONSAVEL', M, y+3);
+  doc.text('DATA', M+sw+6, y+3);
+  y += 3.5;
+  doc.setFillColor(FLD_BG[0],FLD_BG[1],FLD_BG[2]);
+  doc.setDrawColor(FLD_BD[0],FLD_BD[1],FLD_BD[2]); doc.setLineWidth(0.25);
+  doc.rect(M, y, sw, 22, 'FD');
+  doc.rect(M+sw+6, y, dw, 22, 'FD');
   try {
     var sigData = canvas.toDataURL('image/png');
-    doc.setDrawColor(BORDER[0], BORDER[1], BORDER[2]);
-    doc.rect(M, y, 70, 25);
-    doc.addImage(sigData, 'PNG', M + 1, y + 1, 68, 23);
-  } catch (e) { /* no sig */ }
-  y += 28;
-  doc.setFontSize(8);
-  doc.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
-  doc.text('Data: ' + (document.getElementById('sigDate').value || ''), M, y);
+    doc.addImage(sigData,'PNG',M+1,y+1,sw-2,20);
+  } catch(e){}
+  doc.setFontSize(9); doc.setTextColor(FLD_TXT[0],FLD_TXT[1],FLD_TXT[2]);
+  doc.text(document.getElementById('sigDate').value||'', M+sw+9, y+13);
 
-  // Footer
-  var fy = 297 - M;
-  doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]);
-  doc.setLineWidth(0.4);
-  doc.line(M, fy - 4, W - M, fy - 4);
-  doc.setFontSize(7);
-  doc.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
-  doc.text('FS | BOUTIQUE  -  Riviera de Sao Lourenco', W / 2, fy, { align: 'center' });
+  // Footer bar
+  doc.setFillColor(BAR[0],BAR[1],BAR[2]);
+  doc.rect(0,285,W,12,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]);
+  doc.text('F', W/2-3, 289.5); doc.text('S', W/2+2, 289.5);
+  doc.setDrawColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]); doc.setLineWidth(0.2);
+  doc.line(W/2, 287, W/2, 291);
+  doc.setFont('helvetica','normal'); doc.setFontSize(5.5); doc.setTextColor(SUB_TXT[0],SUB_TXT[1],SUB_TXT[2]);
+  doc.text('B O U T I Q U E', W/2, 293, {align:'center'});
 
   return doc.output('blob');
 }
