@@ -613,6 +613,8 @@ canvas { display: block; width: 100%; cursor: crosshair; }
 // ── Section toggle ──
 function toggleSection(header) {
   header.closest('.section').classList.toggle('open');
+  // Re-measure signature canvas when its section opens
+  setTimeout(resizeCanvas, 350);
 }
 
 // ── Occupants (max 8, occupant 1 is always present) ──
@@ -713,6 +715,12 @@ function resizeCanvas() {
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
+// Re-measure after layout settles (section transition may not be done at script time)
+setTimeout(resizeCanvas, 500);
+// Also observe the canvas wrapper for size changes
+if (window.ResizeObserver) {
+  new ResizeObserver(function() { resizeCanvas(); }).observe(canvas.parentElement);
+}
 
 function getPos(e) {
   const r = canvas.getBoundingClientRect();
