@@ -827,14 +827,20 @@ function generatePdfBlob(fields) {
   // Header bar
   doc.setFillColor(BAR[0],BAR[1],BAR[2]);
   doc.rect(0,0,W,32,'F');
-  // Brand
-  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]);
-  doc.text('F S   B O U T I Q U E', W/2, 8, {align:'center'});
+  // F S
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]);
+  doc.text('F  S', W/2, 10, {align:'center'});
+  // BOUTIQUE
+  doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(212,200,192);
+  doc.text('B O U T I Q U E', W/2, 14, {align:'center'});
+  // Thin line
+  doc.setDrawColor(212,200,192); doc.setLineWidth(0.2);
+  doc.line(W/2-7.5, 17, W/2+7.5, 17);
   // Title
-  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]);
+  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]);
   doc.text('FICHA DE OCUPACAO', W/2, 22, {align:'center'});
   // Property
-  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(SUB_TXT[0],SUB_TXT[1],SUB_TXT[2]);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(232,221,214);
   doc.text('Condominio Viva Vida Beach  —  Riviera de Sao Lourenco', W/2, 27, {align:'center'});
 
   var y = 37;
