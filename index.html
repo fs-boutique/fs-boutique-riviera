@@ -954,13 +954,9 @@ function generatePdfBlob(fields) {
 
   // Footer bar
   doc.setFillColor(BAR[0],BAR[1],BAR[2]);
-  doc.rect(0,285,W,12,'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]);
-  doc.text('F', W/2-3, 289.5); doc.text('S', W/2+2, 289.5);
-  doc.setDrawColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]); doc.setLineWidth(0.2);
-  doc.line(W/2, 287, W/2, 291);
-  doc.setFont('helvetica','normal'); doc.setFontSize(5.5); doc.setTextColor(SUB_TXT[0],SUB_TXT[1],SUB_TXT[2]);
-  doc.text('B O U T I Q U E', W/2, 293, {align:'center'});
+  doc.rect(0,289,W,8,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]);
+  doc.text('F S  |  B O U T I Q U E   —   Riviera de Sao Lourenco', W/2, 294, {align:'center'});
 
   return doc.output('blob');
 }
