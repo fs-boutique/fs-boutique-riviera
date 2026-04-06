@@ -16,7 +16,7 @@
   --border: #2a2a2a;
   --border-light: #333;
   --gold: #8C7468;
-  --gold-light: #a89878;
+  --gold-light: #a08a7e;
   --gold-dim: rgba(140, 116, 104, 0.15);
   --gold-glow: rgba(140, 116, 104, 0.08);
   --white: #f5f5f0;
@@ -803,22 +803,20 @@ function buildSummary(fields) {
 const HOST_EMAIL = 'fabio@fsboutique.co';
 const HOST_WHATSAPP = '5511910634851';
 
-// ── PDF generation ──
+// ── PDF generation — dark theme ──
 function generatePdfBlob(fields) {
   if (!window.jspdf || !window.jspdf.jsPDF) {
     throw new Error('jsPDF nao carregou. Recarregue a pagina.');
   }
   var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
   var W = 210, M = 12, CW = W - 2*M;
-  // Approved colors
-  var BG      = [255,252,250]; // #FFFCFA
-  var BAR     = [140,116,104]; // #8C7468
-  var BAR_TXT = [255,252,250]; // #FFFCFA
-  var SUB_TXT = [232,221,214]; // #e8ddd6
-  var FLD_BG  = [245,240,235]; // #f5f0eb
-  var FLD_BD  = [212,200,192]; // #d4c8c0
-  var FLD_TXT = [58, 46, 40];  // #3a2e28
-  var LBL     = [160,148,136]; // #a09488
+  var BG      = [10,10,10];      // #0a0a0a
+  var BAR     = [140,116,104];   // #8C7468
+  var CREAM   = [255,252,250];   // #FFFCFA
+  var CREAM7  = [178,176,175];   // cream at 0.7 opacity on dark
+  var FLD_BG  = [20,20,20];      // #141414
+  var FLD_BD  = [42,42,42];      // #2a2a2a
+  var LBL     = [140,116,104];   // #8C7468
 
   // Page background
   doc.setFillColor(BG[0],BG[1],BG[2]);
@@ -828,19 +826,19 @@ function generatePdfBlob(fields) {
   doc.setFillColor(BAR[0],BAR[1],BAR[2]);
   doc.rect(0,0,W,32,'F');
   // F S
-  doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]);
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(CREAM[0],CREAM[1],CREAM[2]);
   doc.text('F  S', W/2, 10, {align:'center'});
   // BOUTIQUE
-  doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(212,200,192);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(CREAM7[0],CREAM7[1],CREAM7[2]);
   doc.text('B O U T I Q U E', W/2, 14, {align:'center'});
   // Thin line
-  doc.setDrawColor(212,200,192); doc.setLineWidth(0.2);
+  doc.setDrawColor(CREAM7[0],CREAM7[1],CREAM7[2]); doc.setLineWidth(0.2);
   doc.line(W/2-7.5, 17, W/2+7.5, 17);
   // Title
-  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]);
+  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(CREAM[0],CREAM[1],CREAM[2]);
   doc.text('FICHA DE OCUPACAO', W/2, 22, {align:'center'});
-  // Property
-  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(232,221,214);
+  // Subtitle
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(CREAM7[0],CREAM7[1],CREAM7[2]);
   doc.text('Condominio Viva Vida Beach  —  Riviera de Sao Lourenco', W/2, 27, {align:'center'});
 
   var y = 37;
@@ -850,7 +848,7 @@ function generatePdfBlob(fields) {
   function sec(title) {
     y += 2;
     doc.setFillColor(BAR[0],BAR[1],BAR[2]);
-    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]);
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(CREAM[0],CREAM[1],CREAM[2]);
     doc.rect(M, y, CW, 6.5, 'F');
     doc.text('  '+title, M, y+4.8);
     y += 9;
@@ -863,7 +861,7 @@ function generatePdfBlob(fields) {
     doc.setFillColor(FLD_BG[0],FLD_BG[1],FLD_BG[2]);
     doc.setDrawColor(FLD_BD[0],FLD_BD[1],FLD_BD[2]); doc.setLineWidth(0.25);
     doc.rect(x, y+3.5, w, fh, 'FD');
-    doc.setFontSize(8.5); doc.setTextColor(FLD_TXT[0],FLD_TXT[1],FLD_TXT[2]);
+    doc.setFontSize(8.5); doc.setTextColor(CREAM[0],CREAM[1],CREAM[2]);
     var lines = doc.splitTextToSize(String(value||''), w-4);
     doc.text(lines[0]||'', x+2, y+9.5);
   }
@@ -901,7 +899,6 @@ function generatePdfBlob(fields) {
     fld('E-mail', o['E-mail']||o['Email']||'', M, CW); y += 12.5;
   });
 
-  // Vehicles
   var vehs = fields.filter(function(f){ return f.label.indexOf('Ve')===0; });
   if(vehs.length){
     sec('VEICULOS');
@@ -912,13 +909,11 @@ function generatePdfBlob(fields) {
     }
   }
 
-  // Stay period
   sec('PERIODO DE OCUPACAO');
   fld('Data de Inicio', prop['Data de Início']||prop['Data de Inicio']||'', M, hw);
   fld('Data de Termino', prop['Data de Término']||prop['Data de Termino']||'', M+hw+4, hw);
   y += 12.5;
 
-  // Declaration
   sec('DECLARACAO & ASSINATURA');
   var declTxt = 'Eu, abaixo assinado(a), declaro que li e concordo com o Regulamento Interno do Condominio Viva Vida Beach e me comprometo a cumpri-lo durante todo o periodo de ocupacao.';
   var declLines = doc.splitTextToSize(declTxt, CW-4);
@@ -937,20 +932,22 @@ function generatePdfBlob(fields) {
   y += 3.5;
   doc.setFillColor(FLD_BG[0],FLD_BG[1],FLD_BG[2]);
   doc.setDrawColor(FLD_BD[0],FLD_BD[1],FLD_BD[2]); doc.setLineWidth(0.25);
-  doc.rect(M, y, sw, 22, 'FD');
-  doc.rect(M+sw+6, y, dw, 22, 'FD');
+  doc.rect(M, y, sw, 30, 'FD');
+  doc.rect(M+sw+6, y, dw, 30, 'FD');
   try {
     var sigData = canvas.toDataURL('image/png');
-    doc.addImage(sigData,'PNG',M+1,y+1,sw-2,20);
+    doc.addImage(sigData,'PNG',M+1,y+1,sw-2,28);
   } catch(e){}
-  doc.setFontSize(9); doc.setTextColor(FLD_TXT[0],FLD_TXT[1],FLD_TXT[2]);
-  doc.text(document.getElementById('sigDate').value||'', M+sw+9, y+13);
+  doc.setFontSize(9); doc.setTextColor(CREAM[0],CREAM[1],CREAM[2]);
+  doc.text(document.getElementById('sigDate').value||'', M+sw+9, y+17);
 
   // Footer bar
   doc.setFillColor(BAR[0],BAR[1],BAR[2]);
-  doc.rect(0,289,W,8,'F');
-  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(BAR_TXT[0],BAR_TXT[1],BAR_TXT[2]);
-  doc.text('F S   B O U T I Q U E   —   Riviera de Sao Lourenco', W/2, 293.5, {align:'center'});
+  doc.rect(0,285,W,12,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(CREAM[0],CREAM[1],CREAM[2]);
+  doc.text('F  S', W/2, 289.5, {align:'center'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(5); doc.setTextColor(CREAM7[0],CREAM7[1],CREAM7[2]);
+  doc.text('B O U T I Q U E', W/2, 293, {align:'center'});
 
   return doc.output('blob');
 }
