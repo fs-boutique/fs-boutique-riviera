@@ -704,7 +704,7 @@ let drawing = false, hasSig = false;
 function resizeCanvas() {
   const wrap = canvas.parentElement;
   canvas.width = wrap.clientWidth - 4;
-  ctx.strokeStyle = '#8C7468';
+  ctx.strokeStyle = '#6F5C53';
   ctx.lineWidth = 1.5;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -803,85 +803,86 @@ function buildSummary(fields) {
 const HOST_EMAIL = 'fabio@fsboutique.co';
 const HOST_WHATSAPP = '5511910634851';
 
-// ── PDF generation — taupe theme ──
+// ── PDF generation — clean white palette, dynamic pagination ──
 function generatePdfBlob(fields) {
   if (!window.jspdf || !window.jspdf.jsPDF) {
     throw new Error('jsPDF não carregou. Recarregue a página.');
   }
-  var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
-  var W = 210, M = 12, CW = W - 2*M;
-  var BG      = [140,116,104];   // #8C7468 — taupe page background
-  var BAR     = [111,92,83];     // #6F5C53 — darker taupe for section headers
-  var CREAM   = [255,252,250];   // #FFFCFA — cream text
-  var CREAM70 = [221,211,206];   // cream at ~70% opacity on taupe bg
-  var FLD_BG  = [155,132,120];   // #9B8478 — lighter taupe for field backgrounds
-  var FLD_BD  = [255,252,250];   // #FFFCFA — cream accent lines/dividers
-  var LBL     = [221,211,206];   // cream at 70% for labels
-  var SIG_BG  = [255,252,250];   // #FFFCFA — white signature area background
 
-  // Page background — full taupe
-  doc.setFillColor(BG[0],BG[1],BG[2]);
-  doc.rect(0,0,W,297,'F');
+  // Layout
+  var W = 210, M = 14, CW = W - 2*M;
+  var A4_H = 297;
+  var HEADER_H = 38;
+  var CONT_HEADER_H = 24;
+  var FOOTER_H = 11;
+  var FOOTER_GAP = 4;
+  var TOP_Y = HEADER_H + 4;
+  var TOP_Y_CONT = CONT_HEADER_H + 4;
+  var BOTTOM_LIMIT = A4_H - FOOTER_H - FOOTER_GAP;
+  var hw = (CW - 4) / 2;
+  var tw = (CW - 8) / 3;
 
-  // Header bar — darker taupe
-  doc.setFillColor(BAR[0],BAR[1],BAR[2]);
-  doc.rect(0,0,W,32,'F');
-  // F S brand mark
-  doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(CREAM[0],CREAM[1],CREAM[2]);
-  doc.text('F  S', W/2, 10, {align:'center'});
-  // BOUTIQUE
-  doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(CREAM70[0],CREAM70[1],CREAM70[2]);
-  doc.text('B O U T I Q U E', W/2, 14, {align:'center'});
-  // Thin cream accent line
-  doc.setDrawColor(CREAM70[0],CREAM70[1],CREAM70[2]); doc.setLineWidth(0.2);
-  doc.line(W/2-7.5, 17, W/2+7.5, 17);
-  // Title
-  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(CREAM[0],CREAM[1],CREAM[2]);
-  doc.text('FICHA DE OCUPA\u00C7\u00C3O', W/2, 22, {align:'center'});
-  // Subtitle
-  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(CREAM70[0],CREAM70[1],CREAM70[2]);
-  doc.text('Condom\u00EDnio Viva Vida Beach  \u2014  Riviera de S\u00E3o Louren\u00E7o', W/2, 27, {align:'center'});
+  // Spacing
+  var SEC_BAR_H = 7.5;
+  var SEC_AFTER = 2.5;
+  var ROW_H = 10.5;
+  var FLD_H = 7;
+  var SIG_BOX_H = 38;
+  var BLOCK_GAP = 3;
 
-  var y = 37;
-  var hw = (CW-4)/2;
-  var tw = (CW-8)/3;
+  // Colors — taupe-only palette on white
+  var BG        = [255,255,255];   // #FFFFFF page
+  var TAUPE     = [140,116,104];   // #8C7468 primary taupe — labels, values, body text
+  var TAUPE_DK  = [111,92,83];     // #6F5C53 dark taupe — titles, section bar text
+  var BAR_BG    = [245,240,235];   // #F5F0EB section header bar
+  var DIV       = [168,154,142];   // #A89A8E light taupe — hairline borders / dividers
+  var FLD_BG    = [255,255,255];
+  var SIG_BG    = [255,255,255];
 
-  function sec(title) {
-    y += 2;
-    doc.setFillColor(BAR[0],BAR[1],BAR[2]);
-    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(CREAM[0],CREAM[1],CREAM[2]);
-    doc.rect(M, y, CW, 6.5, 'F');
-    doc.text('  '+title, M, y+4.8);
-    y += 9;
+  function fmtDate(s) {
+    if (!s) return '';
+    var m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? (m[3] + '/' + m[2] + '/' + m[1]) : s;
   }
 
-  function fld(label, value, x, w, fh) {
-    fh = fh || 8;
-    doc.setFontSize(6); doc.setTextColor(LBL[0],LBL[1],LBL[2]); doc.setFont('helvetica','normal');
-    doc.text(label.toUpperCase(), x, y+3);
-    doc.setFillColor(FLD_BG[0],FLD_BG[1],FLD_BG[2]);
-    doc.setDrawColor(FLD_BD[0],FLD_BD[1],FLD_BD[2]); doc.setLineWidth(0.25);
-    doc.rect(x, y+3.5, w, fh, 'FD');
-    doc.setFontSize(8.5); doc.setTextColor(CREAM[0],CREAM[1],CREAM[2]);
-    var lines = doc.splitTextToSize(String(value||''), w-4);
-    doc.text(lines[0]||'', x+2, y+9.5);
+  // Centering helper: jsPDF's {align:'center'} ignores setCharSpace when
+  // measuring width, so tracked text appears shifted. We compute the true
+  // rendered width (base width + (N-1)*charSpace) and position manually.
+  function centerText(doc, text, cx, y, charSpace) {
+    var w = doc.getTextWidth(text);
+    if (charSpace && text.length > 1) w += (text.length - 1) * charSpace;
+    doc.text(text, cx - w / 2, y);
   }
 
+  // Draw helpers (operate on any doc at absolute y)
+  function drawSec(doc, y, title) {
+    doc.setFillColor(BAR_BG[0],BAR_BG[1],BAR_BG[2]);
+    doc.rect(M, y, CW, SEC_BAR_H, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(TAUPE_DK[0],TAUPE_DK[1],TAUPE_DK[2]);
+    doc.setCharSpace(0.5);
+    doc.text(title, M + 3, y + 5.3);
+    doc.setCharSpace(0);
+  }
+
+  function drawFld(doc, y, label, value, x, w, fh) {
+    fh = fh || FLD_H;
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
+    doc.setTextColor(TAUPE[0],TAUPE[1],TAUPE[2]);
+    doc.setCharSpace(0.5);
+    doc.text(label.toUpperCase(), x, y + 2.6);
+    doc.setCharSpace(0);
+    doc.setDrawColor(DIV[0],DIV[1],DIV[2]); doc.setLineWidth(0.35);
+    doc.rect(x, y + 3.2, w, fh);
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(TAUPE[0],TAUPE[1],TAUPE[2]);
+    var lines = doc.splitTextToSize(String(value || ''), w - 4);
+    doc.text(lines[0] || '', x + 2.5, y + 8);
+  }
+
+  // Data
   var prop = {};
   fields.forEach(function(f){ prop[f.label] = f.value; });
 
-  sec('PROPRIEDADE & ANFITRI\u00C3O');
-  fld('Anfitri\u00E3o', 'Fabio Silva', M, hw);
-  fld('Condom\u00EDnio', 'Viva Vida Beach', M+hw+4, hw);
-  y += 12.5;
-  fld('Apartamento', prop['Apartamento']||'17A', M, hw);
-  fld('Bloco', prop['Bloco']||'M\u00F3dulo 7', M+hw+4, hw);
-  y += 12.5;
-  fld('Localiza\u00E7\u00E3o', 'Riviera de S\u00E3o Louren\u00E7o, Bertioga, SP', M, CW);
-  y += 12.5;
-
-  sec('OCUPANTES');
-  var occFields = fields.filter(function(f){ return f.label.indexOf('Ocupante')===0; });
+  var occFields = fields.filter(function(f){ return f.label.indexOf('Ocupante') === 0; });
   var occMap = {};
   occFields.forEach(function(f){
     var parts = f.label.split(' — ');
@@ -890,68 +891,217 @@ function generatePdfBlob(fields) {
     if (!occMap[num]) occMap[num] = {};
     occMap[num][key] = f.value;
   });
-  Object.keys(occMap).forEach(function(num) {
-    var o = occMap[num];
-    fld('Nome Completo', o['Nome']||o['Full Name']||'', M, CW); y += 12.5;
-    fld('RG', o['RG']||'', M, tw);
-    fld('CPF', o['CPF']||'', M+tw+4, tw);
-    fld('Telefone', o['Telefone']||o['Phone']||'', M+tw*2+8, tw);
-    y += 12.5;
-    fld('E-mail', o['E-mail']||o['Email']||'', M, CW); y += 12.5;
+  var occNums = Object.keys(occMap).sort().filter(function(n){
+    var name = (occMap[n]['Nome'] || occMap[n]['Full Name'] || '').toString().trim();
+    return name.length > 0;
   });
 
-  var vehs = fields.filter(function(f){ return f.label.indexOf('Ve')===0; });
-  if(vehs.length){
-    sec('VE\u00CDCULOS');
-    for(var i=0; i<vehs.length; i+=2){
-      fld(vehs[i].label.split(' — ')[1]||'Modelo/Cor', vehs[i].value, M, hw);
-      if(vehs[i+1]) fld(vehs[i+1].label.split(' — ')[1]||'Placa', vehs[i+1].value, M+hw+4, hw);
-      y+=12.5;
+  var vehs = fields.filter(function(f){ return f.label.indexOf('Ve') === 0; });
+
+  // Pre-measure declaration wrap using a temp doc
+  var declTxt = 'Eu, abaixo assinado(a), declaro que li e concordo com o Regulamento Interno do Condom\u00EDnio Viva Vida Beach e me comprometo a cumpri-lo durante todo o per\u00EDodo de ocupa\u00E7\u00E3o.';
+  var tmp = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+  tmp.setFont('helvetica','normal'); tmp.setFontSize(9);
+  var declLines = tmp.splitTextToSize(declTxt, CW - 6);
+  var DECL_BOX_H = declLines.length * 4.6 + 7;
+
+  // Build atomic (non-breakable) blocks
+  var blocks = [];
+
+  // 1. PROPRIEDADE & ANFITRIÃO
+  blocks.push({
+    h: SEC_BAR_H + SEC_AFTER + ROW_H * 3,
+    draw: function(doc, y) {
+      drawSec(doc, y, 'PROPRIEDADE & ANFITRI\u00C3O');
+      var yy = y + SEC_BAR_H + SEC_AFTER;
+      drawFld(doc, yy, 'Anfitri\u00E3o', 'Fabio Silva', M, hw);
+      drawFld(doc, yy, 'Condom\u00EDnio', 'Viva Vida Beach', M + hw + 4, hw);
+      yy += ROW_H;
+      drawFld(doc, yy, 'Apartamento', prop['Apartamento'] || '17A', M, hw);
+      drawFld(doc, yy, 'Bloco', prop['Bloco'] || 'M\u00F3dulo 7', M + hw + 4, hw);
+      yy += ROW_H;
+      drawFld(doc, yy, 'Localiza\u00E7\u00E3o', 'Riviera de S\u00E3o Louren\u00E7o, Bertioga, SP', M, CW);
+    }
+  });
+
+  // 2. OCUPANTES — header + one block per filled occupant
+  if (occNums.length > 0) {
+    blocks.push({
+      h: SEC_BAR_H,
+      draw: function(doc, y) { drawSec(doc, y, 'OCUPANTES'); }
+    });
+    occNums.forEach(function(num) {
+      var o = occMap[num];
+      blocks.push({
+        h: ROW_H * 3,
+        draw: function(doc, y) {
+          var yy = y;
+          drawFld(doc, yy, 'Nome Completo', o['Nome'] || o['Full Name'] || '', M, CW); yy += ROW_H;
+          drawFld(doc, yy, 'RG', o['RG'] || '', M, tw);
+          drawFld(doc, yy, 'CPF', o['CPF'] || '', M + tw + 4, tw);
+          drawFld(doc, yy, 'Telefone', o['Telefone'] || o['Phone'] || '', M + tw * 2 + 8, tw);
+          yy += ROW_H;
+          drawFld(doc, yy, 'E-mail', o['E-mail'] || o['Email'] || '', M, CW);
+        }
+      });
+    });
+  }
+
+  // 3. VEÍCULOS
+  if (vehs.length) {
+    var vehRows = Math.ceil(vehs.length / 2);
+    blocks.push({
+      h: SEC_BAR_H + SEC_AFTER + ROW_H * vehRows,
+      draw: function(doc, y) {
+        drawSec(doc, y, 'VE\u00CDCULOS');
+        var yy = y + SEC_BAR_H + SEC_AFTER;
+        for (var i = 0; i < vehs.length; i += 2) {
+          drawFld(doc, yy, (vehs[i].label.split(' — ')[1]) || 'Modelo/Cor', vehs[i].value, M, hw);
+          if (vehs[i+1]) drawFld(doc, yy, (vehs[i+1].label.split(' — ')[1]) || 'Placa', vehs[i+1].value, M + hw + 4, hw);
+          yy += ROW_H;
+        }
+      }
+    });
+  }
+
+  // 4. PERÍODO DE OCUPAÇÃO
+  blocks.push({
+    h: SEC_BAR_H + SEC_AFTER + ROW_H,
+    draw: function(doc, y) {
+      drawSec(doc, y, 'PER\u00CDODO DE OCUPA\u00C7\u00C3O');
+      var yy = y + SEC_BAR_H + SEC_AFTER;
+      drawFld(doc, yy, 'Data de In\u00EDcio', fmtDate(prop['Data de Início'] || prop['Data de Inicio'] || ''), M, hw);
+      drawFld(doc, yy, 'Data de T\u00E9rmino', fmtDate(prop['Data de Término'] || prop['Data de Termino'] || ''), M + hw + 4, hw);
+    }
+  });
+
+  // 5. DECLARAÇÃO & ASSINATURA — atomic; must render in full
+  var SIG_LABEL_GAP = 3.5;
+  var sigTotal = SEC_BAR_H + SEC_AFTER + DECL_BOX_H + 4 + SIG_LABEL_GAP + SIG_BOX_H;
+  blocks.push({
+    h: sigTotal,
+    draw: function(doc, y) {
+      drawSec(doc, y, 'DECLARA\u00C7\u00C3O & ASSINATURA');
+      var yy = y + SEC_BAR_H + SEC_AFTER;
+      doc.setDrawColor(DIV[0],DIV[1],DIV[2]); doc.setLineWidth(0.35);
+      doc.rect(M, yy, CW, DECL_BOX_H);
+      doc.setFont('helvetica','normal'); doc.setFontSize(9);
+      doc.setTextColor(TAUPE[0],TAUPE[1],TAUPE[2]);
+      doc.text(declLines, M + 3, yy + 5);
+      yy += DECL_BOX_H + 4;
+      doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(TAUPE[0],TAUPE[1],TAUPE[2]);
+      doc.setCharSpace(0.5);
+      var sw = CW * 0.62, dw = CW * 0.32;
+      doc.text('ASSINATURA DO RESPONS\u00C1VEL', M, yy + 2.6);
+      doc.text('DATA', M + sw + 6, yy + 2.6);
+      doc.setCharSpace(0);
+      yy += SIG_LABEL_GAP;
+      doc.setDrawColor(DIV[0],DIV[1],DIV[2]); doc.setLineWidth(0.35);
+      doc.rect(M, yy, sw, SIG_BOX_H);
+      doc.rect(M + sw + 6, yy, dw, SIG_BOX_H);
+      try {
+        var sigData = canvas.toDataURL('image/png');
+        doc.addImage(sigData, 'PNG', M + 1, yy + 1, sw - 2, SIG_BOX_H - 2);
+      } catch(e) {}
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(TAUPE[0],TAUPE[1],TAUPE[2]);
+      doc.text(fmtDate(document.getElementById('sigDate').value || ''), M + sw + 9, yy + SIG_BOX_H / 2 + 1.5);
+    }
+  });
+
+  // ── Paginate ──
+  var pages = [[]];
+  var curY = TOP_Y;
+  var curPage = 0;
+
+  for (var i = 0; i < blocks.length; i++) {
+    var b = blocks[i];
+    if (curY + b.h > BOTTOM_LIMIT && pages[curPage].length > 0) {
+      pages.push([]);
+      curPage++;
+      curY = TOP_Y_CONT;
+    }
+    pages[curPage].push({ block: b, y: curY });
+    curY += b.h + BLOCK_GAP;
+  }
+
+  var lastContentEnd = curY - BLOCK_GAP;
+  var lastPageH = Math.min(
+    A4_H,
+    Math.max(TOP_Y_CONT + 40, lastContentEnd + FOOTER_GAP + FOOTER_H + 4)
+  );
+
+  var pageHeights = pages.map(function(_, idx){
+    return (idx < pages.length - 1) ? A4_H : lastPageH;
+  });
+
+  // ── Render ──
+  var doc = new window.jspdf.jsPDF({ unit: 'mm', format: [W, pageHeights[0]] });
+
+  function drawChrome(doc, pageIdx, pageH) {
+    doc.setFillColor(BG[0],BG[1],BG[2]);
+    doc.rect(0, 0, W, pageH, 'F');
+    if (pageIdx === 0) {
+      var cx = W / 2;
+      // Compact FS mark — all three (FS, divider, BOUTIQUE) share cx
+      doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(TAUPE[0],TAUPE[1],TAUPE[2]);
+      doc.setCharSpace(0.3);
+      centerText(doc, 'FS', cx, 12, 0.3);
+      // BOUTIQUE (tracked)
+      doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(TAUPE[0],TAUPE[1],TAUPE[2]);
+      doc.setCharSpace(1.4);
+      centerText(doc, 'BOUTIQUE', cx, 16, 1.4);
+      doc.setCharSpace(0);
+      // Thin taupe accent under mark — geometric center at cx
+      doc.setDrawColor(TAUPE[0],TAUPE[1],TAUPE[2]); doc.setLineWidth(0.3);
+      doc.line(cx - 7, 18.5, cx + 7, 18.5);
+      // Title
+      doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(TAUPE_DK[0],TAUPE_DK[1],TAUPE_DK[2]);
+      doc.setCharSpace(0.9);
+      centerText(doc, 'FICHA DE OCUPA\u00C7\u00C3O', cx, 27, 0.9);
+      doc.setCharSpace(0);
+      // Subtitle (no tracking → native center alignment is accurate)
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(TAUPE[0],TAUPE[1],TAUPE[2]);
+      doc.text('Condom\u00EDnio Viva Vida Beach  \u2014  Riviera de S\u00E3o Louren\u00E7o', cx, 32, {align:'center'});
+      doc.setDrawColor(DIV[0],DIV[1],DIV[2]); doc.setLineWidth(0.35);
+      doc.line(M, HEADER_H - 2, W - M, HEADER_H - 2);
+    } else {
+      // Compact FS mark on left
+      doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(TAUPE[0],TAUPE[1],TAUPE[2]);
+      doc.setCharSpace(0.25);
+      doc.text('FS', M, 11);
+      doc.setFont('helvetica','normal'); doc.setFontSize(5.5); doc.setTextColor(TAUPE[0],TAUPE[1],TAUPE[2]);
+      doc.setCharSpace(1.3);
+      doc.text('BOUTIQUE', M, 14.5);
+      doc.setCharSpace(0);
+      // Continuation title on right
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(TAUPE_DK[0],TAUPE_DK[1],TAUPE_DK[2]);
+      doc.text('FICHA DE OCUPA\u00C7\u00C3O  \u2014  continua\u00E7\u00E3o', W - M, 13, {align:'right'});
+      doc.setDrawColor(DIV[0],DIV[1],DIV[2]); doc.setLineWidth(0.35);
+      doc.line(M, CONT_HEADER_H - 3, W - M, CONT_HEADER_H - 3);
     }
   }
 
-  sec('PER\u00CDODO DE OCUPA\u00C7\u00C3O');
-  fld('Data de In\u00EDcio', prop['Data de Início']||prop['Data de Inicio']||'', M, hw);
-  fld('Data de T\u00E9rmino', prop['Data de Término']||prop['Data de Termino']||'', M+hw+4, hw);
-  y += 12.5;
+  function drawFooter(doc, pageH) {
+    var fy = pageH - FOOTER_H;
+    var cx = W / 2;
+    doc.setDrawColor(DIV[0],DIV[1],DIV[2]); doc.setLineWidth(0.35);
+    doc.line(M, fy, W - M, fy);
+    // FS + BOUTIQUE share cx via charSpace-aware centering
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(TAUPE[0],TAUPE[1],TAUPE[2]);
+    doc.setCharSpace(0.25);
+    centerText(doc, 'FS', cx, fy + 4.8, 0.25);
+    doc.setFont('helvetica','normal'); doc.setFontSize(5); doc.setTextColor(TAUPE[0],TAUPE[1],TAUPE[2]);
+    doc.setCharSpace(1.1);
+    centerText(doc, 'BOUTIQUE', cx, fy + 8, 1.1);
+    doc.setCharSpace(0);
+  }
 
-  sec('DECLARA\u00C7\u00C3O & ASSINATURA');
-  var declTxt = 'Eu, abaixo assinado(a), declaro que li e concordo com o Regulamento Interno do Condom\u00EDnio Viva Vida Beach e me comprometo a cumpri-lo durante todo o per\u00EDodo de ocupa\u00E7\u00E3o.';
-  var declLines = doc.splitTextToSize(declTxt, CW-4);
-  var dh = declLines.length*4.5+6;
-  doc.setFillColor(FLD_BG[0],FLD_BG[1],FLD_BG[2]);
-  doc.setDrawColor(FLD_BD[0],FLD_BD[1],FLD_BD[2]); doc.setLineWidth(0.25);
-  doc.rect(M, y, CW, dh, 'FD');
-  doc.setFontSize(7.5); doc.setTextColor(CREAM[0],CREAM[1],CREAM[2]); doc.setFont('helvetica','normal');
-  doc.text(declLines, M+2, y+5);
-  y += dh+4;
-
-  var sw = CW*0.62, dw = CW*0.32;
-  doc.setFontSize(6); doc.setTextColor(LBL[0],LBL[1],LBL[2]);
-  doc.text('ASSINATURA DO RESPONS\u00C1VEL', M, y+3);
-  doc.text('DATA', M+sw+6, y+3);
-  y += 3.5;
-  // Signature box — cream background for taupe signature stroke visibility
-  doc.setFillColor(SIG_BG[0],SIG_BG[1],SIG_BG[2]);
-  doc.setDrawColor(FLD_BD[0],FLD_BD[1],FLD_BD[2]); doc.setLineWidth(0.25);
-  doc.rect(M, y, sw, 30, 'FD');
-  // Date box — lighter taupe background
-  doc.setFillColor(FLD_BG[0],FLD_BG[1],FLD_BG[2]);
-  doc.rect(M+sw+6, y, dw, 30, 'FD');
-  try {
-    var sigData = canvas.toDataURL('image/png');
-    doc.addImage(sigData,'PNG',M+1,y+1,sw-2,28);
-  } catch(e){}
-  doc.setFontSize(9); doc.setTextColor(CREAM[0],CREAM[1],CREAM[2]);
-  doc.text(document.getElementById('sigDate').value||'', M+sw+9, y+17);
-
-  // Footer bar — darker taupe
-  doc.setFillColor(BAR[0],BAR[1],BAR[2]);
-  doc.rect(0,285,W,12,'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(CREAM[0],CREAM[1],CREAM[2]);
-  doc.text('F  S', W/2, 289.5, {align:'center'});
-  doc.setFont('helvetica','normal'); doc.setFontSize(5); doc.setTextColor(CREAM70[0],CREAM70[1],CREAM70[2]);
-  doc.text('B O U T I Q U E', W/2, 293, {align:'center'});
+  pages.forEach(function(pageBlocks, pageIdx) {
+    if (pageIdx > 0) doc.addPage([W, pageHeights[pageIdx]]);
+    drawChrome(doc, pageIdx, pageHeights[pageIdx]);
+    pageBlocks.forEach(function(entry) { entry.block.draw(doc, entry.y); });
+    if (pageIdx === pages.length - 1) drawFooter(doc, pageHeights[pageIdx]);
+  });
 
   return doc.output('blob');
 }
