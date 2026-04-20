@@ -60,6 +60,7 @@ body {
   text-transform: uppercase;
   color: var(--white);
   margin-top: 16px;
+  margin-right: -6px;
 }
 .header p {
   font-weight: 300;
@@ -426,7 +427,7 @@ canvas { display: block; width: 100%; cursor: crosshair; }
 </div>
   <div style="font-family: 'Playfair Display', Georgia, serif; font-size: 8px; letter-spacing: 5px; color: var(--text-dim); margin-top: 2px; padding-left: 5px;">BOUTIQUE</div>
   <div style="width: 30px; height: 0.5px; background: var(--text-dim); margin: 12px auto;"></div>
-  <h1>Ficha de Ocupação</h1>
+  <h1>Formulário</h1>
   <p>Riviera de São Lourenço &mdash; Condomínio Viva Vida Beach</p>
 </div>
 
@@ -1030,9 +1031,7 @@ function generatePdfBlob(fields) {
     Math.max(TOP_Y_CONT + 40, lastContentEnd + FOOTER_GAP + FOOTER_H + 4)
   );
 
-  var pageHeights = pages.map(function(_, idx){
-    return (idx < pages.length - 1) ? A4_H : lastPageH;
-  });
+  var pageHeights = pages.map(function(){ return A4_H; });
 
   // ── Render ──
   var doc = new window.jspdf.jsPDF({ unit: 'mm', format: [W, pageHeights[0]] });
